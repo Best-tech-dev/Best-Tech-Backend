@@ -1,67 +1,183 @@
-import { Injectable } from '@nestjs/common';
+import { 
+  Injectable, 
+  ConflictException,
+  UnauthorizedException, 
+  InternalServerErrorException
+} from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import * as bcrypt from 'bcrypt';
+
+import { User } from './schemas/user.schema';
+import { CreateUserDto } from './dto/sign-up.dto';
+import { SignInDto } from './dto/sign-in.dto';
+import { Tokens } from './interfaces/tokens.interface';
+import { AuthPayload } from './interfaces/auth-payload.interface';
 import * as colors from 'colors';
 import { failureResponse, successResponse } from 'src/utils/response';
+import { formatDate } from 'src/common/helper-functions/formatter';
 
 @Injectable()
 export class IdentityService {
-  async signin(body: any) {
+  constructor(
+    @InjectModel(User.name) private userModel: Model<User>,
+    private jwtService: JwtService,
+    private configService: ConfigService,
+  ) {}
+
+  /////////////////////////                           Create a new user å/*  */
+  /////////////////////////                           Create a new user å/*  */
+  async createUser(signUpDto: CreateUserDto): Promise<any> {
+
+    console.log(colors.green('Creating new User...'));
+
     try {
-      console.log(colors.green('Signing in user...'));
-
-      const user = { id: 1, name: 'Test User' }; 
-
-      console.log(colors.magenta('User signed in successfully'));
-      return successResponse(200, true, 'User signed in successfully', undefined, user);
-
+      const { email, password, firstName, lastName } = signUpDto;
+  
+      // Check if user already exists
+      const existingUser = await this.userModel.findOne({ email }).exec();
+      if (existingUser) {
+        console.log(colors.red('User with supplied email already exists'));
+        return failureResponse(409, 'User with supplied email already exists', false);
+      }
+  
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+  
+      // Create new user
+      const newUser = new this.userModel({
+        email,
+        password: hashedPassword,
+        firstName,
+        lastName,
+      });
+  
+      await newUser.save();
+  
+      
+  
+      const formattedData = {
+        id: newUser._id,
+        role: newUser.role,
+        email: newUser.email,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        createdAt: formatDate(newUser.createdAt),
+        updatedAt: formatDate(newUser.updatedAt),
+      };
+  
+      console.log(colors.magenta('New User successfully created'));
+      return successResponse(201, true, 'New User successfully created', undefined, formattedData);
     } catch (error) {
-      console.log(colors.red('Error signing in user'));
-      return failureResponse(500, 'Error signing in user', false);
+      if (error instanceof ConflictException) {
+        throw error;
+      }
+  
+      console.error(colors.red('Error in createNewUser:'), error);
+  
+      // You can throw a more specific exception depending on the nature of the error
+      throw new InternalServerErrorException('Failed to create new user');
     }
   }
+  
 
-    // sign up
-    // POST /auth/signup
-    // Public 
-    signup(body: any) {
-        console.log(colors.green('User signed up successfully'));
+  async signIn(dto: SignInDto): Promise<Tokens> {
+    console.log(colors.green('Signing in user...'));
 
-        try {
-            
-        } catch (error) {
-            console.log(colors.red(`Error signing in user: ${error.message}`));
-            return failureResponse(500, 'Error signing up user', false);
-        }
-
-        console.log(colors.magenta('User signed up successfully'));
-        return successResponse(201, true, 'User signed up successfully', undefined, { id: 1, name: 'Test User' });
+    // Find user by email
+    const user = await this.userModel.findOne({ email: dto.email }).exec();
+    
+    if (!user) {
+      console.log(colors.red('User not found'));
+      return failureResponse(404, 'User not found', false);
     }
 
-    // sign out
-    // POST /auth/signout
-    // Private
-    signout() {
-        return { message: 'Signout successful' };
+    // Compare passwords
+    const isPasswordValid = await bcrypt.compare(dto.password, user.password);
+    
+    if (!isPasswordValid) {
+      console.log(colors.red('Invalid credentials'));
+      return failureResponse(401, 'Invalid credentials', false);
     }
 
-    // forgot password
-    // POST /auth/forgot-password
-    // Public
-    forgotPassword() {
-        return { message: 'Forgot password successful' };
+    // Generate tokens
+    const tokens = await this.generateTokens({
+      sub: user._id.toString(),
+      email: user.email,
+    });
+
+    await this.userModel.findByIdAndUpdate(user._id, { 
+      refreshToken: tokens.refreshToken 
+    }).exec();
+
+    const formattedUser = {
+      accessToken: tokens.accessToken,
+      id: user._id,
+      role: user.role,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      createdAt: formatDate(user.createdAt),
+      updatedAt: formatDate(user.updatedAt),
     }
 
-    // reset password
-    // POST /auth/reset-password
-    // Public
-    resetPassword() {
-        return { message: 'Reset password successful' };
+    console.log(colors.magenta('User signed in successfully'));
+    return successResponse(
+      200, 
+      true, 
+      'User signed in successfully', 
+      undefined, 
+      formattedUser);
+  }
+
+  async signout(userId: string): Promise<void> {
+    const user = await this.userModel.findById(userId).exec();
+  
+    if (!user) {
+      return failureResponse(404, 'User not found', false);
+    }
+  
+    user.refreshToken = undefined;
+    await user.save();
+  
+    return successResponse(200, true, 'User logged out successfully');
+  }
+
+  async refreshTokens(
+    userId: string, 
+    refreshToken: string
+  ): Promise<Tokens> {
+    // Find user by ID
+    const user = await this.userModel.findById(userId).exec();
+    
+    if (!user) {
+      throw new UnauthorizedException('Invalid user');
     }
 
-    // verify email
-    // POST /auth/verify-email
-    // Public
-    verifyEmail() {
-        return { message: 'Verify email successful' };
-    }
+    const tokens = await this.generateTokens({
+      sub: user._id.toString(),
+      email: user.email,
+    });
+
+    return successResponse(200, true, 'Tokens refreshed successfully', undefined, {
+      accessToken: tokens.accessToken,
+    });
+  }
+
+  private async generateTokens(payload: AuthPayload): Promise<{ accessToken: string; refreshToken: string }> {
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(payload, {
+        secret: this.configService.get<string>('jwt.accessSecret'),
+        expiresIn: this.configService.get<string>('jwt.accessExpiresIn'),
+      }),
+      this.jwtService.signAsync(payload, {
+        secret: this.configService.get<string>('jwt.refreshSecret'),
+        expiresIn: this.configService.get<string>('jwt.refreshExpiresIn'),
+      }),
+    ]);
+
+    return { accessToken, refreshToken };
+  }
 }
-
