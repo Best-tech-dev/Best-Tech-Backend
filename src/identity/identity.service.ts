@@ -106,6 +106,7 @@ export class IdentityService {
     const tokens = await this.generateTokens({
       sub: user._id.toString(),
       email: user.email,
+      role: user.role,
     });
 
     await this.userModel.findByIdAndUpdate(user._id, { 
@@ -159,6 +160,7 @@ export class IdentityService {
     const tokens = await this.generateTokens({
       sub: user._id.toString(),
       email: user.email,
+      role: user.role,
     });
 
     return successResponse(200, true, 'Tokens refreshed successfully', undefined, {
@@ -166,7 +168,7 @@ export class IdentityService {
     });
   }
 
-  private async generateTokens(payload: AuthPayload): Promise<{ accessToken: string; refreshToken: string }> {
+  private async generateTokens(payload: AuthPayload): Promise<{ accessToken: string; refreshToken: string, role: string }> {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
         secret: this.configService.get<string>('jwt.accessSecret'),
@@ -178,6 +180,6 @@ export class IdentityService {
       }),
     ]);
 
-    return { accessToken, refreshToken };
+    return { accessToken, refreshToken, role: payload.role };
   }
 }

@@ -24,12 +24,17 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(payload: AuthPayload) {
+    // console.log("From jwt.strategy: Payload sub: ", payload.sub);
     const user = await this.userModel.findById(payload.sub).exec();
     
     if (!user) {
       throw new UnauthorizedException('Invalid token');
     }
     
-    return user;
+    return {
+      userId: user._id,
+      email: user.email,
+      role: user.role,
+    };
   }
 }

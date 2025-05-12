@@ -1,4 +1,5 @@
 export interface AuthPayload {
-    sub: string;  // userId
-    email: string;
-  }
+  sub: string;
+  email: string;
+  role: string;
+}
