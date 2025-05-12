@@ -3,10 +3,16 @@ import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from 'src/identity/schemas/user.schema';
+import { StaffModule } from './staff/staff.module';
+import { StudentModule } from './student/student.module';
+import { AdminAuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]), // ✅ Register the User model here
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    StaffModule,
+    StudentModule,
+    AdminAuthModule, 
   ],
   controllers: [AdminController],
   providers: [AdminService]
