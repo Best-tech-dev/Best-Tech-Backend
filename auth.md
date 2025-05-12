@@ -12,7 +12,7 @@ npm i -g @nestjs/cli
 
 # Create a new NestJS project
 nest new auth-api
-cd auth-api
+cd auth-api   
 ```
 
 ### 2. Install required dependencies
