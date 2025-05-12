@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  bt-dev-db:
+    image: postgres:15-alpine
+    ports:
+      - 5434:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: besttech-db
+    networks:
+      - besttech
+
+networks:
+  besttech: {} 
