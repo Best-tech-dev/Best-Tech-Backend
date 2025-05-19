@@ -22,6 +22,6 @@ async function bootstrap() {
   const port = process.env.PORT || 2000;
   await app.listen(port, '0.0.0.0');
 
-  console.log(`Server is running on: ${process.env.NODE_ENV === 'production' ? process.env.STAGING_URL : process.env.LOCAL_URL}`);
+  console.log(`Server is running on:`);
 }
 bootstrap();
