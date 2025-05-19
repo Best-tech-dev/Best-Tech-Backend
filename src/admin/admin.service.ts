@@ -4,10 +4,16 @@ import { Model } from 'mongoose';
 import { User } from 'src/identity/schemas/user.schema';
 import * as colors from 'colors';
 import { successResponse } from 'src/utils/response';
+import { Service } from 'src/services/schema/services.schema';
+import { Category } from 'src/services/schema/category.schema';
 
 @Injectable()
 export class AdminService {
-    constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+    constructor(
+        @InjectModel(User.name) private userModel: Model<User>,
+        @InjectModel(Service.name) private ServiceModel: Model<Service>,
+        @InjectModel(Category.name) private CategoryModel: Model<any>,
+    ) {}
 
     async getAllUsers(userpayload: any) {
         console.log(colors.green('Fetching all users...'));
@@ -52,27 +58,54 @@ export class AdminService {
         }
     }
 
-    // async getDashboard(userpayload: any) {
-    //     console.log(colors.green('Fetching dashboard data...'));
+    // This function fetches the dashboard data for the admin
+    async getDashboard(userpayload: any) {
+        console.log(colors.green('Fetching dashboard data...'));
 
-    //     try {
-    //         const totalUsers = await this.userModel.countDocuments().exec();
-    //         console.log(colors.green(`Total users: ${totalUsers}`));
+        const loggedInUser = await this.userModel.findById(userpayload.userId).exec();
+        // console.log("logged in user: ", loggedInUser);
+        
 
-    //         return successResponse(
-    //             200,
-    //             true,
-    //             'Dashboard data fetched successfully',
-    //             undefined,
-    //             { totalUsers },
-    //         );
-    //     } catch (error) {
-    //         console.error(colors.red('Error fetching dashboard data:'));
-    //         return successResponse(
-    //             500,
-    //             false,
-    //             'Error fetching dashboard data',
-    //         );
-    //     }
-    // }
+        try {
+            const totalUsers = await this.userModel.countDocuments().exec();
+            const totalServices = await this.ServiceModel.countDocuments().exec();
+            const totalCategories = await this.CategoryModel.countDocuments().exec();
+            const totalEnrollments = 0;
+            const totalRevenues = 0;
+
+            const formattedRes = {
+                totalUsers,
+                totalServices,
+                totalCategories,
+                totalEnrollments,
+                totalRevenues,
+                loggedInUser: {
+                    id: loggedInUser?._id,
+                    email: loggedInUser?.email,
+                    firstName: loggedInUser?.firstName,
+                    lastName: loggedInUser?.lastName,
+                    role: loggedInUser?.role,
+                    createdAt: loggedInUser?.createdAt,
+                    updatedAt: loggedInUser?.updatedAt,
+                },
+            }
+
+            return successResponse(
+                200,
+                true,
+                'Dashboard data fetched successfully',
+                undefined,
+                { 
+                    formattedRes
+                 },
+            );
+        } catch (error) {
+            console.error(colors.red('Error fetching dashboard data: '), error);
+            return successResponse(
+                500,
+                false,
+                'Error fetching dashboard data',
+            );
+        }
+    }
 }
