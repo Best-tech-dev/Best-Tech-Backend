@@ -52,27 +52,27 @@ export class AdminService {
         }
     }
 
-    async getDashboard(userpayload: any) {
-        console.log(colors.green('Fetching dashboard data...'));
+    // async getDashboard(userpayload: any) {
+    //     console.log(colors.green('Fetching dashboard data...'));
 
-        try {
-            const totalUsers = await this.userModel.countDocuments().exec();
-            console.log(colors.green(`Total users: ${totalUsers}`));
+    //     try {
+    //         const totalUsers = await this.userModel.countDocuments().exec();
+    //         console.log(colors.green(`Total users: ${totalUsers}`));
 
-            return successResponse(
-                200,
-                true,
-                'Dashboard data fetched successfully',
-                undefined,
-                { totalUsers },
-            );
-        } catch (error) {
-            console.error(colors.red('Error fetching dashboard data:'));
-            return successResponse(
-                500,
-                false,
-                'Error fetching dashboard data',
-            );
-        }
-    }
+    //         return successResponse(
+    //             200,
+    //             true,
+    //             'Dashboard data fetched successfully',
+    //             undefined,
+    //             { totalUsers },
+    //         );
+    //     } catch (error) {
+    //         console.error(colors.red('Error fetching dashboard data:'));
+    //         return successResponse(
+    //             500,
+    //             false,
+    //             'Error fetching dashboard data',
+    //         );
+    //     }
+    // }
 }

@@ -15,11 +15,11 @@ export class AdminController {
         return await this.adminService.getAllUsers(userpayload);
     }
 
-    @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles('admin')
-    @Get('dashboard')
-    async getDashboard(userpayload: any) {
-        return await this.adminService.getDashboard(userpayload);
-    }
+    // @UseGuards(JwtAuthGuard, RolesGuard)
+    // @Roles('admin')
+    // @Get('dashboard')
+    // async getDashboard(userpayload: any) {
+    //     return await this.adminService.getDashboard(userpayload);
+    // }
     
 }
