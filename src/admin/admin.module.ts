@@ -6,13 +6,15 @@ import { User, UserSchema } from 'src/identity/schemas/user.schema';
 import { StaffModule } from './staff/staff.module';
 import { StudentModule } from './student/student.module';
 import { AdminAuthModule } from './auth/auth.module';
+import { ServicesModule } from 'src/services/services.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     StaffModule,
     StudentModule,
-    AdminAuthModule, 
+    AdminAuthModule,
+    ServicesModule
   ],
   controllers: [AdminController],
   providers: [AdminService]

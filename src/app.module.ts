@@ -7,6 +7,9 @@ import { validationSchema } from './config/validation.schema';
 import { IdentityModule } from './identity/identity.module';
 import { UsersModule } from './users/users.module';
 import { AdminModule } from './admin/admin.module';
+import { ServicesModule } from './services/services.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 @Module({
   imports: [
@@ -24,7 +27,10 @@ import { AdminModule } from './admin/admin.module';
     }),
     IdentityModule,
     UsersModule,
-    AdminModule
+    AdminModule,
+    ServicesModule
   ],
+  controllers: [AppController],
+  providers: [AppService]
 })
 export class AppModule {}
