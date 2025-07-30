@@ -1,23 +1,27 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { RequestMethod, ValidationPipe } from '@nestjs/common';
-
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as cors from 'cors';
+import { LoggerService } from './common/logger/logger.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const logger = app.get(LoggerService);
 
-app.enableCors({
-  origin: (origin, callback) => {
-    const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',');
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  methods: process.env.ALLOWED_METHODS || 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-  credentials: true,
-});
+  // Enable CORS
+  app.enableCors({
+    origin: (origin, callback) => {
+      const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',');
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    methods: process.env.ALLOWED_METHODS || 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+  });
 
   // ✅ Enable global validation pipe
   app.useGlobalPipes(
@@ -32,9 +36,42 @@ app.enableCors({
     exclude: [{ path: '', method: RequestMethod.GET }],
   });
 
+  // Swagger Documentation Setup
+  const config = new DocumentBuilder()
+    .setTitle('B-Tech Backend API')
+    .setDescription('A comprehensive API for B-Tech services and user management')
+    .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token',
+        in: 'header',
+      },
+      'JWT-auth', // This name here is important for references
+    )
+    .addTag('Authentication', 'User authentication and authorization endpoints')
+    .addTag('Users', 'User management endpoints')
+    .addTag('Services', 'Service management endpoints')
+    .addTag('Categories', 'Category management endpoints')
+    .addTag('Admin', 'Admin-specific endpoints')
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api/docs', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  });
+
   const port = process.env.PORT || 2000;
   await app.listen(port, '0.0.0.0');
 
-  console.log(`Server is running on: http://localhost:${port}/api/v1`);
+  logger.log(`🚀 Server is running on: http://localhost:${port}/api/v1`, 'Server');
+  logger.log(`📚 API Documentation available at: http://localhost:${port}/api/docs`, 'Server');
+  logger.log(`🔗 Health check: http://localhost:${port}/api/v1/health`, 'Server');
 }
+
 bootstrap();

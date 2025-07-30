@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { Request } from 'express';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { IdentityService } from './identity.service';
 import { CreateUserDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
@@ -23,10 +24,37 @@ declare module 'express' {
   }
 }
 
+@ApiTags('Authentication')
 @Controller('identity')
 export class IdentityController {
   constructor(private identityService: IdentityService) {}
 
+  @ApiOperation({ summary: 'Create a new user account' })
+  @ApiResponse({ 
+    status: 201, 
+    description: 'User created successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        statusCode: { type: 'number', example: 201 },
+        success: { type: 'boolean', example: true },
+        message: { type: 'string', example: 'New User successfully created' },
+        data: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', example: 'clx1234567890' },
+            role: { type: 'string', example: 'user' },
+            email: { type: 'string', example: 'john.doe@example.com' },
+            firstName: { type: 'string', example: 'John' },
+            lastName: { type: 'string', example: 'Doe' },
+            createdAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
+            updatedAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' }
+          }
+        }
+      }
+    }
+  })
+  @ApiResponse({ status: 409, description: 'User with supplied email already exists' })
   @Post('signup')
   @HttpCode(HttpStatus.CREATED)
   async createUser(@Body() dto: CreateUserDto, @Res() res: Response) {
@@ -34,6 +62,34 @@ export class IdentityController {
     return res.status(result.statusCode).json(result);
   }
 
+  @ApiOperation({ summary: 'Sign in user with email and password' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'User signed in successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        statusCode: { type: 'number', example: 200 },
+        success: { type: 'boolean', example: true },
+        message: { type: 'string', example: 'User signed in successfully' },
+        data: {
+          type: 'object',
+          properties: {
+            accessToken: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' },
+            id: { type: 'string', example: 'clx1234567890' },
+            role: { type: 'string', example: 'user' },
+            email: { type: 'string', example: 'john.doe@example.com' },
+            firstName: { type: 'string', example: 'John' },
+            lastName: { type: 'string', example: 'Doe' },
+            createdAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
+            updatedAt: { type: 'string', example: '2024-01-01T00:00:00.000Z' }
+          }
+        }
+      }
+    }
+  })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  @ApiResponse({ status: 404, description: 'User not found' })
   @Post('signin')
   @HttpCode(HttpStatus.OK)
   async signIn(@Body() dto: SignInDto, @Res() res: Response) {
@@ -41,6 +97,10 @@ export class IdentityController {
     return res.status(Number(result.statusCode)).json(result);
   }
 
+  @ApiOperation({ summary: 'Sign out user (requires authentication)' })
+  @ApiBearerAuth('JWT-auth')
+  @ApiResponse({ status: 200, description: 'User signed out successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   @UseGuards(JwtAuthGuard)
   @Post('signout')
   @HttpCode(HttpStatus.OK)
@@ -54,6 +114,19 @@ export class IdentityController {
     )
   }
 
+  @ApiOperation({ summary: 'Refresh access token using refresh token' })
+  @ApiBearerAuth('JWT-auth')
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Token refreshed successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        accessToken: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' }
+      }
+    }
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   @UseGuards(JwtRefreshGuard)
   @Post('refresh')
   @HttpCode(HttpStatus.OK)

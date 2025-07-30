@@ -1,21 +1,15 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Service } from './schema/services.schema';
-import { Model } from 'mongoose';
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateServiceDto } from './dto/create-service.dto';
 import * as colors from 'colors';
 import { failureResponse, successResponse } from 'src/utils/response';
-import { Category } from './schema/category.schema';
 import { CreateCategoryDto } from './dto/create-category-dto';
 import { CreateSubcategoryDto } from './dto/create-sub-category';
-import { Subcategory } from './schema/sub-category-schema';
 
 @Injectable()
 export class ServicesService {
     constructor(
-        @InjectModel(Service.name) private serviceModel: Model<Service>,
-        @InjectModel(Category.name) private categoryModel: Model<Category>,
-        @InjectModel(Subcategory.name) private subcategoryModel: Model<Subcategory>,
+        private prisma: PrismaService,
     ) {}
 
     // /////////////////////                           Create a new category
@@ -23,7 +17,9 @@ export class ServicesService {
         console.log(colors.green('Creating new category...'));
       
         try {
-          const existingCategory = await this.categoryModel.findOne({ categoryName: dto.categoryName }).exec();
+          const existingCategory = await this.prisma.category.findFirst({
+            where: { categoryName: dto.categoryName }
+          });
           if (existingCategory) {
             console.log(colors.red('Category with supplied name already exists'));
             return successResponse(
@@ -33,13 +29,13 @@ export class ServicesService {
             );
           }
       
-          const newCategory = new this.categoryModel({
-            ...dto,
-            user: user.userId,
-            creatorEmail: user.email,
+          const newCategory = await this.prisma.category.create({
+            data: {
+              ...dto,
+              userId: user.userId,
+              creatorEmail: user.email,
+            }
           });
-      
-          await newCategory.save();
       
           console.log(colors.magenta('New category created successfully'));
           return successResponse(201, true, 'New category created successfully');
@@ -56,16 +52,17 @@ export class ServicesService {
         try {
 
             // console.log("categoryId", dto.categoryId);
-            const category = await this.categoryModel.findById(dto.categoryId).exec();
+            const category = await this.prisma.category.findUnique({
+                where: { id: dto.categoryId }
+            });
         
             if (!category) {
-                const allCategories = await this.categoryModel
-                .find({}, { 
-                    categoryName: 1,
-                    _id: 1 
-                })
-                .lean()
-                .exec();
+                const allCategories = await this.prisma.category.findMany({
+                    select: {
+                        categoryName: true,
+                        id: true
+                    }
+                });
         
                 console.log(colors.red('Invalid category selected — not found in DB'));
         
@@ -77,7 +74,9 @@ export class ServicesService {
                 };
             }
 
-            const existingCategory = await this.subcategoryModel.findOne({ subcategoryName: dto.subcategoryName }).exec();
+            const existingCategory = await this.prisma.subcategory.findFirst({
+                where: { subcategoryName: dto.subcategoryName }
+            });
             if (existingCategory) {
                 console.log(colors.red('Subcategory with supplied name already exists'));
                 return successResponse(
@@ -87,17 +86,17 @@ export class ServicesService {
                 );
             }
       
-            const subcategory = new this.subcategoryModel({
-                subcategoryName: dto.subcategoryName,
-                categoryId: dto.categoryId,
-                user: user.userId,
-                creatorEmail: user.email,
+            const subcategory = await this.prisma.subcategory.create({
+                data: {
+                    subcategoryName: dto.subcategoryName,
+                    categoryId: dto.categoryId,
+                    userId: user.userId,
+                    creatorEmail: user.email,
+                }
             });
-      
-          await subcategory.save();
 
           const formattedSubcategory = {
-            id: subcategory._id,
+            id: subcategory.id,
             subCategoryName: subcategory.subcategoryName,
             categoryId: subcategory.categoryId,
             user: subcategory.user,
@@ -128,19 +127,23 @@ export class ServicesService {
         try {
 
             // Check if service already exists
-            const existingService = await this.serviceModel.findOne({ name: dto.title }).exec();
+            const existingService = await this.prisma.service.findFirst({
+                where: { title: dto.title }
+            });
             if (existingService) {
                 console.log(colors.red('Service with supplied name already exists'));
                 return { statusCode: 409, message: 'Service with supplied name already exists', success: false };
             }
 
             // Create new service
-            const newService = new this.serviceModel({
-                ...dto,
-                user: user.userId, // from validated jwt
-                creatorEmail: user.email,
+            const newService = await this.prisma.service.create({
+                data: {
+                    ...dto,
+                    userId: user.userId, // from validated jwt
+                    createdById: user.userId,
+                    creatorEmail: user.email,
+                }
             });
-            await newService.save();
 
             console.log(colors.magenta('New service created successfully'));
             return successResponse(
@@ -162,30 +165,24 @@ export class ServicesService {
     // /////////////////////                           Get all categories with subcategories
     async getAllCategoriesWithSubcategories() {
         try {
-          const categories = await this.categoryModel
-            .find({}, { categoryName: 1 }) // You can include more fields if needed
-            .lean()
-            .exec();
-      
-          const subcategories = await this.subcategoryModel
-            .find({}, { subcategoryName: 1, categoryId: 1 })
-            .lean()
-            .exec();
-      
-          const result = categories.map(category => {
-            const relatedSubcategories = subcategories
-              .filter(sub => sub.categoryId.toString() === category._id.toString())
-              .map(sub => ({
-                id: sub._id,
-                subcategoryName: sub.subcategoryName,
-              }));
-      
-            return {
-              id: category._id,
-              categoryName: category.categoryName,
-              subcategories: relatedSubcategories,
-            };
+          const categories = await this.prisma.category.findMany({
+            select: {
+              id: true,
+              categoryName: true,
+              subcategories: {
+                select: {
+                  id: true,
+                  subcategoryName: true,
+                }
+              }
+            }
           });
+      
+          const result = categories.map(category => ({
+            id: category.id,
+            categoryName: category.categoryName,
+            subcategories: category.subcategories,
+          }));
       
           return successResponse(
             200,

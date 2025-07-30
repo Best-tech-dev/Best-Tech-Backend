@@ -15,11 +15,16 @@ export class AdminService {
         @InjectModel(Category.name) private CategoryModel: Model<any>,
     ) {}
 
-    async getAllUsers(userpayload: any) {
-        console.log(colors.green('Fetching all users...'));
+    async getAllUsers(userpayload: any, roleFilter?: string) {
+        console.log(colors.green('Fetching users...'));
 
         try {
-            const users = await this.userModel.find().exec();
+            let query = {};
+            if (roleFilter) {
+                query = { role: roleFilter };
+            }
+
+            const users = await this.userModel.find(query).exec();
             if (!users || users.length === 0) {
                 console.log(colors.red('No users found'));
                 return successResponse(

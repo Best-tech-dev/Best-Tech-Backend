@@ -4,13 +4,11 @@ import {
   UnauthorizedException, 
   InternalServerErrorException
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 
-import { User } from './schemas/user.schema';
 import { CreateUserDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { Tokens } from './interfaces/tokens.interface';
@@ -22,7 +20,7 @@ import { formatDate } from 'src/common/helper-functions/formatter';
 @Injectable()
 export class IdentityService {
   constructor(
-    @InjectModel(User.name) private userModel: Model<User>,
+    private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
   ) {}
@@ -37,7 +35,9 @@ export class IdentityService {
       const { email, password, firstName, lastName } = signUpDto;
   
       // Check if user already exists
-      const existingUser = await this.userModel.findOne({ email }).exec();
+      const existingUser = await this.prisma.user.findUnique({
+        where: { email }
+      });
       if (existingUser) {
         console.log(colors.red('User with supplied email already exists'));
         return failureResponse(409, 'User with supplied email already exists', false);
@@ -47,19 +47,17 @@ export class IdentityService {
       const hashedPassword = await bcrypt.hash(password, 10);
   
       // Create new user
-      const newUser = new this.userModel({
-        email,
-        password: hashedPassword,
-        firstName,
-        lastName,
+      const newUser = await this.prisma.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          firstName,
+          lastName,
+        }
       });
   
-      await newUser.save();
-  
-      
-  
       const formattedData = {
-        id: newUser._id,
+        id: newUser.id,
         role: newUser.role,
         email: newUser.email,
         firstName: newUser.firstName,
@@ -87,7 +85,9 @@ export class IdentityService {
     console.log(colors.green('Signing in user...'));
 
     // Find user by email
-    const user = await this.userModel.findOne({ email: dto.email }).exec();
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email }
+    });
     
     if (!user) {
       console.log(colors.red('User not found'));
@@ -104,18 +104,19 @@ export class IdentityService {
 
     // Generate tokens
     const tokens = await this.generateTokens({
-      sub: user._id.toString(),
+      sub: user.id,
       email: user.email,
       role: user.role,
     });
 
-    await this.userModel.findByIdAndUpdate(user._id, { 
-      refreshToken: tokens.refreshToken 
-    }).exec();
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { refreshToken: tokens.refreshToken }
+    });
 
     const formattedUser = {
       accessToken: tokens.accessToken,
-      id: user._id,
+      id: user.id,
       role: user.role,
       email: user.email,
       firstName: user.firstName,
@@ -134,14 +135,18 @@ export class IdentityService {
   }
 
   async signout(userId: string): Promise<void> {
-    const user = await this.userModel.findById(userId).exec();
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId }
+    });
   
     if (!user) {
       return failureResponse(404, 'User not found', false);
     }
   
-    user.refreshToken = undefined;
-    await user.save();
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { refreshToken: null }
+    });
   
     return successResponse(200, true, 'User logged out successfully');
   }
@@ -151,14 +156,16 @@ export class IdentityService {
     refreshToken: string
   ): Promise<Tokens> {
     // Find user by ID
-    const user = await this.userModel.findById(userId).exec();
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId }
+    });
     
     if (!user) {
       throw new UnauthorizedException('Invalid user');
     }
 
     const tokens = await this.generateTokens({
-      sub: user._id.toString(),
+      sub: user.id,
       email: user.email,
       role: user.role,
     });

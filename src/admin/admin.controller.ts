@@ -12,8 +12,10 @@ export class AdminController {
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles('admin')
     @Get('users')
-    async getAllUsers(userpayload: any) {
-        return await this.adminService.getAllUsers(userpayload);
+    async getAllUsers(@Req() req: Request) {
+        // Accept role as query param: /admin/users?role=student|staff|admin
+        const role = req.query.role as string | undefined;
+        return await this.adminService.getAllUsers(req.user, role);
     }
 
     @UseGuards(JwtAuthGuard, RolesGuard)

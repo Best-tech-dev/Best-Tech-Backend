@@ -98,3 +98,248 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
 # besttechnologiesltd-backend
+
+# B-Tech Backend API
+
+A comprehensive NestJS backend API for B-Tech services with PostgreSQL database, Prisma ORM, JWT authentication, and comprehensive logging.
+
+## 🚀 Features
+
+- **PostgreSQL Database** with Prisma ORM
+- **JWT Authentication** with refresh tokens
+- **Role-based Access Control** (User, Admin, Staff)
+- **Comprehensive Logging** with Winston
+- **Swagger API Documentation**
+- **CORS Support**
+- **Input Validation** with class-validator
+- **Health Check Endpoints**
+
+## 📋 Prerequisites
+
+- Node.js (v18 or higher)
+- PostgreSQL database
+- npm or yarn
+
+## 🛠️ Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd btech-backend
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Environment Setup**
+   Create a `.env` file in the root directory:
+   ```env
+   # Database
+   DATABASE_URL="postgresql://postgres:your_password@localhost:5432/best_tech_db?schema=public"
+
+   # JWT Configuration
+   JWT_ACCESS_SECRET=your_jwt_access_secret_here
+   JWT_REFRESH_SECRET=your_jwt_refresh_secret_here
+   JWT_ACCESS_EXPIRATION=15m
+   JWT_REFRESH_EXPIRATION=7d
+
+   # Server Configuration
+   PORT=2000
+
+   # CORS Configuration
+   ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
+   ALLOWED_METHODS=GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS
+   ```
+
+4. **Database Setup**
+   ```bash
+   # Generate Prisma client
+   npm run prisma:generate
+
+   # Create and apply database migrations
+   npm run prisma:migrate
+
+   # Or push schema directly (for development)
+   npm run db:push
+   ```
+
+5. **Start the application**
+   ```bash
+   # Development mode
+   npm run start:dev
+
+   # Production mode
+   npm run start:prod
+   ```
+
+## 📚 API Documentation
+
+Once the server is running, you can access:
+
+- **Swagger UI**: http://localhost:2000/api/docs
+- **API Base URL**: http://localhost:2000/api/v1
+- **Health Check**: http://localhost:2000/api/v1/health
+
+## 🔐 Authentication
+
+The API uses JWT tokens for authentication:
+
+1. **Sign Up**: `POST /api/v1/identity/signup`
+2. **Sign In**: `POST /api/v1/identity/signin`
+3. **Sign Out**: `POST /api/v1/identity/signout` (requires auth)
+4. **Refresh Token**: `POST /api/v1/identity/refresh` (requires auth)
+
+## 📊 Logging
+
+The application includes comprehensive logging:
+
+- **Console Logs**: Real-time logs in development
+- **File Logs**: Stored in `logs/` directory
+  - `combined.log`: All logs
+  - `error.log`: Error logs only
+
+### Logging Commands
+```bash
+# View all logs
+npm run logs:view
+
+# View error logs only
+npm run logs:error
+
+# Clear all logs
+npm run logs:clear
+```
+
+### Log Features
+- Database connection logging
+- API request logging with response times
+- Error tracking with stack traces
+- Sanitized database URLs in logs
+
+## 🗄️ Database Schema
+
+### Tables
+- **users**: User accounts with authentication
+- **staff**: Staff profiles linked to users
+- **students**: Student profiles linked to users
+- **categories**: Service categories
+- **subcategories**: Subcategories linked to categories
+- **services**: Services linked to categories and users
+
+### Database Commands
+```bash
+# Generate Prisma client
+npm run prisma:generate
+
+# Create migration
+npm run prisma:migrate
+
+# Push schema changes
+npm run db:push
+
+# Open Prisma Studio
+npm run prisma:studio
+```
+
+## 🔧 Available Scripts
+
+```bash
+# Development
+npm run start:dev          # Start in development mode
+npm run start:debug        # Start in debug mode
+
+# Production
+npm run build              # Build the application
+npm run start:prod         # Start in production mode
+
+# Database
+npm run prisma:generate    # Generate Prisma client
+npm run prisma:migrate     # Create and apply migrations
+npm run prisma:studio      # Open Prisma Studio
+npm run db:push           # Push schema changes
+
+# Logging
+npm run logs:view         # View combined logs
+npm run logs:error        # View error logs
+npm run logs:clear        # Clear all logs
+
+# Code Quality
+npm run lint              # Run ESLint
+npm run format            # Format code with Prettier
+
+# Testing
+npm run test              # Run unit tests
+npm run test:e2e          # Run end-to-end tests
+npm run test:cov          # Run tests with coverage
+```
+
+## 🏗️ Project Structure
+
+```
+src/
+├── common/
+│   ├── decorators/       # Custom decorators
+│   ├── guards/          # Authentication guards
+│   ├── helper-functions/ # Utility functions
+│   └── logger/          # Logging service
+├── config/              # Configuration files
+├── identity/            # Authentication module
+├── users/               # User management
+├── services/            # Service management
+├── admin/               # Admin functionality
+├── prisma/              # Database service
+└── main.ts              # Application entry point
+```
+
+## 🔒 Security Features
+
+- JWT token authentication
+- Role-based access control
+- Input validation and sanitization
+- CORS protection
+- Password hashing with bcrypt
+- Secure database connections
+
+## 🚨 Error Handling
+
+The application includes comprehensive error handling:
+
+- Validation errors with detailed messages
+- Authentication errors
+- Database connection errors
+- Custom error responses
+- Logged errors with stack traces
+
+## 📈 Monitoring
+
+- Health check endpoints
+- Database connection monitoring
+- API request/response logging
+- Error tracking and reporting
+- Performance metrics
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## 🆘 Support
+
+For support and questions:
+1. Check the API documentation at `/api/docs`
+2. Review the logs for error details
+3. Check the database connection
+4. Verify environment variables
+
+## 🔄 Migration from MongoDB
+
+This project was migrated from MongoDB to PostgreSQL. See `MIGRATION_GUIDE.md` for detailed information about the migration process and benefits.

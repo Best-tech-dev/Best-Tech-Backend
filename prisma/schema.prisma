@@ -1,0 +1,130 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  firstName    String
+  lastName     String
+  email        String    @unique
+  password     String
+  role         Role      @default(USER)
+  refreshToken String?
+  otp          String?
+  otpExpires   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  createdServices      Service[]     @relation("ServiceCreator")
+  createdCategories    Category[]
+  createdSubcategories Subcategory[]
+  staffProfile         Staff?
+  studentProfile       Student?
+  Service              Service[]
+
+  @@map("users")
+}
+
+model Staff {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("staff")
+}
+
+model Student {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("students")
+}
+
+model Category {
+  id           String   @id @default(cuid())
+  categoryName String
+  description  String?
+  icon         String?
+  tags         String[]
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  creatorEmail  String
+  services      Service[]
+  subcategories Subcategory[]
+
+  @@map("categories")
+}
+
+model Subcategory {
+  id              String   @id @default(cuid())
+  subcategoryName String
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  categoryId   String
+  category     Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  creatorEmail String
+  services     Service[]
+
+  @@map("subcategories")
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  category    String
+  subcategory String?
+  icon        String?
+  price       Float?
+  duration    String?
+  tags        String[]
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdById    String
+  createdBy      User         @relation("ServiceCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  creatorEmail   String
+  categoryId     String?
+  categoryRef    Category?    @relation(fields: [categoryId], references: [id])
+  subcategoryId  String?
+  subcategoryRef Subcategory? @relation(fields: [subcategoryId], references: [id])
+
+  @@map("services")
+}
+
+enum Role {
+  USER
+  ADMIN
+  STAFF
+}

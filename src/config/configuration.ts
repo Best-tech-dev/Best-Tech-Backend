@@ -1,7 +1,7 @@
 export default () => ({
   port: process.env.PORT || 3000,
   database: {
-    uri: process.env.MONGODB_URI,
+    url: process.env.DATABASE_URL,
   },
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET,
