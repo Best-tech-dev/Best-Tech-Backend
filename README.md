@@ -101,7 +101,138 @@ Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
 
 # B-Tech Backend API
 
-A comprehensive NestJS backend API for B-Tech services with PostgreSQL database, Prisma ORM, JWT authentication, and comprehensive logging.
+## 🚨 IMPORTANT: Git Workflow & Branch Management
+
+### 📋 Branch Strategy
+- **`main`** - Production-ready code (stable)
+- **`staging`** - Pre-production testing
+- **`prod`** - Production deployment branch
+
+### 🔄 Development Workflow
+
+#### 1. **Starting New Development**
+```bash
+# Always start from main branch
+git checkout main
+git pull origin main
+
+# Create feature branch from main
+git checkout -b feature/your-feature-name
+```
+
+#### 2. **Making Changes**
+```bash
+# Make your code changes
+# Test your changes locally
+npm run start:dev
+```
+
+#### 3. **Committing Changes**
+```bash
+# Add your changes
+git add .
+
+# Commit with descriptive message
+git commit -m "feat: add new feature description"
+
+# Push to your feature branch
+git push origin feature/your-feature-name
+```
+
+#### 4. **Merging to Staging**
+```bash
+# Switch to staging branch
+git checkout staging
+git pull origin staging
+
+# Merge your feature branch
+git merge feature/your-feature-name
+
+# Push to staging
+git push origin staging
+```
+
+#### 5. **Deploying to Production**
+```bash
+# Switch to main branch
+git checkout main
+git pull origin main
+
+# Merge staging to main
+git merge staging
+
+# Push to main
+git push origin main
+
+# Switch to prod branch
+git checkout prod
+git pull origin prod
+
+# Merge main to prod
+git merge main
+
+# Push to prod
+git push origin prod
+```
+
+### 🎯 Quick Commands Reference
+
+```bash
+# Check current branch
+git branch
+
+# Switch branches
+git checkout main
+git checkout staging
+git checkout prod
+
+# Pull latest changes
+git pull origin main
+git pull origin staging
+git pull origin prod
+
+# Push changes
+git push origin main
+git push origin staging
+git push origin prod
+```
+
+### ⚠️ Important Rules
+1. **Never code directly on `main` or `prod` branches**
+2. **Always create feature branches from `main`**
+3. **Test on `staging` before deploying to `prod`**
+4. **Pull latest changes before starting new work**
+5. **Use descriptive commit messages**
+
+### 🔄 Deployment Order
+1. `main` → `staging` (testing)
+2. `staging` → `prod` (production)
+
+---
+
+<p align="center">
+  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+</p>
+
+[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
+[circleci-url]: https://circleci.com/gh/nestjs/nest
+
+  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
+    <p align="center">
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
+<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
+<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
+<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
+<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
+<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
+  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
+    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
+  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
+</p>
+  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
+  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
 ## 🚀 Features
 
