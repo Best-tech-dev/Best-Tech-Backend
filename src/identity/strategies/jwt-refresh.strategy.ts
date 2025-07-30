@@ -6,16 +6,14 @@ import {
   import { ExtractJwt, Strategy } from 'passport-jwt';
   import { Request } from 'express';
   import { ConfigService } from '@nestjs/config';
-  import { InjectModel } from '@nestjs/mongoose';
-  import { Model } from 'mongoose';
-  import { User } from '../schemas/user.schema';
+  import { PrismaService } from '../../prisma/prisma.service';
   import { AuthPayload } from '../interfaces/auth-payload.interface';
   
   @Injectable()
   export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
     constructor(
       private configService: ConfigService,
-      @InjectModel(User.name) private userModel: Model<User>,
+      private prisma: PrismaService,
     ) {
       super({
         jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -32,17 +30,19 @@ import {
       }
       const refreshToken = authHeader.split(' ')[1];
       
-      const user = await this.userModel
-        .findById(payload.sub)
-        .where('email', payload.email)
-        .exec();
+      const user = await this.prisma.user.findFirst({
+        where: {
+          id: payload.sub,
+          email: payload.email,
+        }
+      });
       
       if (!user) {
         throw new UnauthorizedException('Invalid refresh token');
       }
       
       return { 
-        ...user.toJSON(), 
+        ...user, 
         refreshToken 
       };
     }

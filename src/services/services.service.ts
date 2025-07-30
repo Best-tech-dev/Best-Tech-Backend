@@ -99,7 +99,7 @@ export class ServicesService {
             id: subcategory.id,
             subCategoryName: subcategory.subcategoryName,
             categoryId: subcategory.categoryId,
-            user: subcategory.user,
+            userId: subcategory.userId,
             creatorEmail: subcategory.creatorEmail,
             createdAt: subcategory.createdAt,
             updatedAt: subcategory.updatedAt,

@@ -1,30 +1,27 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { User } from 'src/identity/schemas/user.schema';
+import { PrismaService } from '../prisma/prisma.service';
 import * as colors from 'colors';
 import { successResponse } from 'src/utils/response';
-import { Service } from 'src/services/schema/services.schema';
-import { Category } from 'src/services/schema/category.schema';
 
 @Injectable()
 export class AdminService {
     constructor(
-        @InjectModel(User.name) private userModel: Model<User>,
-        @InjectModel(Service.name) private ServiceModel: Model<Service>,
-        @InjectModel(Category.name) private CategoryModel: Model<any>,
+        private prisma: PrismaService,
     ) {}
 
     async getAllUsers(userpayload: any, roleFilter?: string) {
         console.log(colors.green('Fetching users...'));
 
         try {
-            let query = {};
+            let whereClause = {};
             if (roleFilter) {
-                query = { role: roleFilter };
+                whereClause = { role: roleFilter };
             }
 
-            const users = await this.userModel.find(query).exec();
+            const users = await this.prisma.user.findMany({
+                where: whereClause
+            });
+            
             if (!users || users.length === 0) {
                 console.log(colors.red('No users found'));
                 return successResponse(
@@ -37,7 +34,7 @@ export class AdminService {
             console.log(colors.green(`Total of ${users.length} users found`));
             
             const formattedUsers = users.map(user => ({
-                id: user._id,
+                id: user.id,
                 email: user.email,
                 firstName: user.firstName,
                 lastName: user.lastName,
@@ -67,14 +64,16 @@ export class AdminService {
     async getDashboard(userpayload: any) {
         console.log(colors.green('Fetching dashboard data...'));
 
-        const loggedInUser = await this.userModel.findById(userpayload.userId).exec();
+        const loggedInUser = await this.prisma.user.findUnique({
+            where: { id: userpayload.userId }
+        });
         // console.log("logged in user: ", loggedInUser);
         
 
         try {
-            const totalUsers = await this.userModel.countDocuments().exec();
-            const totalServices = await this.ServiceModel.countDocuments().exec();
-            const totalCategories = await this.CategoryModel.countDocuments().exec();
+            const totalUsers = await this.prisma.user.count();
+            const totalServices = await this.prisma.service.count();
+            const totalCategories = await this.prisma.category.count();
             const totalEnrollments = 0;
             const totalRevenues = 0;
 
@@ -85,7 +84,7 @@ export class AdminService {
                 totalEnrollments,
                 totalRevenues,
                 loggedInUser: {
-                    id: loggedInUser?._id,
+                    id: loggedInUser?.id,
                     email: loggedInUser?.email,
                     firstName: loggedInUser?.firstName,
                     lastName: loggedInUser?.lastName,

@@ -2,13 +2,11 @@ import { Module } from '@nestjs/common';
 import { AdminAuthService } from './auth.service';
 import { AdminAuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Admin, AdminSchema } from '../schema/admin.schema';
-import { User, UserSchema } from 'src/identity/schemas/user.schema';
+import { PrismaModule } from '../../prisma/prisma.module';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    PrismaModule,
     JwtModule.register({}),
   ],
   controllers: [AdminAuthController],

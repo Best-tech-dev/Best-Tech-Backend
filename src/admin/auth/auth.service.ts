@@ -1,7 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Admin } from '../schema/admin.schema';
+import { PrismaService } from '../../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AdminSignInDto, VerifyOtpDto } from '../dto/admin-auth.dto';
@@ -11,13 +9,11 @@ import * as crypto from "crypto"
 import * as colors from 'colors';
 import { sendOTPByEmail } from 'src/mailer/send-email';
 import { AuthPayload } from '../interface/auth-payload.interface';
-import { User } from 'src/identity/schemas/user.schema';
-
 
 @Injectable()
 export class AdminAuthService {
   constructor(
-    @InjectModel(User.name) private adminModel: Model<User>,
+    private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
   ) {}
@@ -27,9 +23,11 @@ export class AdminAuthService {
     console.log(colors.green('Admin signing in...'));
   
     try {
-      const admin = await this.adminModel.findOne({ email: dto.email });
+      const admin = await this.prisma.user.findUnique({ 
+        where: { email: dto.email } 
+      });
   
-      if (!admin || admin.role !== 'admin') {
+      if (!admin || admin.role !== 'ADMIN') {
         console.log(colors.red('Admin not found'));
         return failureResponse(400, 'Admin not found', false);
       }
@@ -42,9 +40,13 @@ export class AdminAuthService {
       const otp = crypto.randomInt(1000, 9999).toString();
       const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 mins expiry
   
-      admin.otp = otp;
-      admin.otpExpires = otpExpiresAt;
-      await admin.save();
+      await this.prisma.user.update({
+        where: { id: admin.id },
+        data: {
+          otp: otp,
+          otpExpires: otpExpiresAt,
+        }
+      });
   
       await sendOTPByEmail(dto.email, otp);
       console.log(colors.magenta(`OTP code: ${otp} sent to user: ${dto.email}`));
@@ -62,30 +64,39 @@ export class AdminAuthService {
     console.log(colors.green('Verifying OTP...'));
   
     try {
-      const admin = await this.adminModel.findOne({ email: dto.email });
+      const admin = await this.prisma.user.findUnique({ 
+        where: { email: dto.email } 
+      });
   
       if (!admin || admin.otp !== dto.otp || !admin.otpExpires || admin.otpExpires < new Date()) {
         return failureResponse(400, 'Invalid or expired OTP', false);
       }
   
       // Clear OTP
-      admin.otp = undefined;
-      admin.otpExpires = undefined;
-      await admin.save();
+      await this.prisma.user.update({
+        where: { id: admin.id },
+        data: {
+          otp: null,
+          otpExpires: null,
+        }
+      });
   
       const tokens = await this.generateTokens({
-        sub: admin._id.toString(),
+        sub: admin.id,
         email: admin.email,
         role: admin.role,
       });
   
-      await this.adminModel.findByIdAndUpdate(admin._id, {
-        refreshToken: tokens.refreshToken,
+      await this.prisma.user.update({
+        where: { id: admin.id },
+        data: {
+          refreshToken: tokens.refreshToken,
+        }
       });
   
       const formatteduser = {
         accessToken: tokens.accessToken,
-        id: admin._id,
+        id: admin.id,
         role: admin.role,
         email: admin.email,
         firstName: admin.firstName,
