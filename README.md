@@ -115,9 +115,10 @@ Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
 # Always start from main branch
 git checkout main
 git pull origin main
+git pull maximus main
 
-# Create feature branch from main
-git checkout -b feature/your-feature-name
+# Create new branch from main
+git checkout -b your-branch-name
 ```
 
 #### 2. **Making Changes**
@@ -135,8 +136,8 @@ git add .
 # Commit with descriptive message
 git commit -m "feat: add new feature description"
 
-# Push to your feature branch
-git push origin feature/your-feature-name
+# Push to your branch
+git push origin your-branch-name
 ```
 
 #### 4. **Merging to Staging**
@@ -144,12 +145,14 @@ git push origin feature/your-feature-name
 # Switch to staging branch
 git checkout staging
 git pull origin staging
+git pull maximus staging
 
-# Merge your feature branch
-git merge feature/your-feature-name
+# Merge your branch
+git merge your-branch-name
 
-# Push to staging
+# Push to staging (both remotes)
 git push origin staging
+git push maximus staging
 ```
 
 #### 5. **Deploying to Production**
@@ -157,22 +160,26 @@ git push origin staging
 # Switch to main branch
 git checkout main
 git pull origin main
+git pull maximus main
 
 # Merge staging to main
 git merge staging
 
-# Push to main
+# Push to main (both remotes)
 git push origin main
+git push maximus main
 
 # Switch to prod branch
 git checkout prod
 git pull origin prod
+git pull maximus prod
 
 # Merge main to prod
 git merge main
 
-# Push to prod
+# Push to prod (both remotes)
 git push origin prod
+git push maximus prod
 ```
 
 ### 🎯 Quick Commands Reference
@@ -186,20 +193,36 @@ git checkout main
 git checkout staging
 git checkout prod
 
-# Pull latest changes
+# Pull latest changes (from both remotes)
 git pull origin main
-git pull origin staging
-git pull origin prod
+git pull maximus main
 
-# Push changes
+# Push changes (to both remotes)
 git push origin main
+git push maximus main
 git push origin staging
+git push maximus staging
 git push origin prod
+git push maximus prod
+```
+
+### 🌐 Remote Management
+
+**Two Remotes Configured:**
+- **`origin`** - Company repository (`Best-tech-dev/Best-Tech-Backend`)
+- **`maximus`** - Personal repository (`maxi-musz/best-tech-backend`)
+
+**Always push to both remotes to keep them in sync:**
+```bash
+# Push to both remotes
+git push origin main && git push maximus main
+git push origin staging && git push maximus staging
+git push origin prod && git push maximus prod
 ```
 
 ### ⚠️ Important Rules
 1. **Never code directly on `main` or `prod` branches**
-2. **Always create feature branches from `main`**
+2. **Always create new branches from `main` (use descriptive names like `add-user-auth`, `fix-login-bug`)**
 3. **Test on `staging` before deploying to `prod`**
 4. **Pull latest changes before starting new work**
 5. **Use descriptive commit messages**
