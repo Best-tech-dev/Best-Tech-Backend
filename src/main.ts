@@ -2,8 +2,9 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { RequestMethod, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import * as cors from 'cors';
+
 import { LoggerService } from './common/logger/logger.service';
+import * as colors from 'colors';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -39,7 +40,7 @@ async function bootstrap() {
   // Swagger Documentation Setup
   const config = new DocumentBuilder()
     .setTitle('B-Tech Backend API')
-    .setDescription('A comprehensive API for B-Tech services and user management')
+    .setDescription('A comprehensive NestJS backend API for B-Tech services')
     .setVersion('1.0')
     .addBearerAuth(
       {
@@ -69,9 +70,8 @@ async function bootstrap() {
   const port = process.env.PORT || 2000;
   await app.listen(port, '0.0.0.0');
 
-  logger.log(`🚀 Server is running on: http://localhost:${port}/api/v1`, 'Server');
-  logger.log(`📚 API Documentation available at: http://localhost:${port}/api/docs`, 'Server');
-  logger.log(`🔗 Health check: http://localhost:${port}/api/v1/health`, 'Server');
+  logger.log(colors.cyan('🚀 Server running on:') + colors.magenta(` http://localhost:${port}/api/v1`));
+  logger.log(colors.cyan('📚 API Documentation:') + colors.magenta(` http://localhost:${port}/api/docs`));
 }
 
 bootstrap();

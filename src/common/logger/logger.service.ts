@@ -1,5 +1,6 @@
 import { Injectable, LoggerService as NestLoggerService } from '@nestjs/common';
 import * as winston from 'winston';
+import * as colors from 'colors';
 
 @Injectable()
 export class LoggerService implements NestLoggerService {
@@ -13,8 +14,23 @@ export class LoggerService implements NestLoggerService {
         winston.format.errors({ stack: true }),
         winston.format.json(),
         winston.format.printf(({ timestamp, level, message, stack, ...meta }) => {
+          // Filter out Prisma query logs and other noise
+          const messageStr = String(message || '');
+          if (messageStr && (
+            messageStr.includes('prisma:query') ||
+            messageStr.includes('prisma:info') ||
+            messageStr.includes('prisma:warn') ||
+            messageStr.includes('prisma:error') ||
+            messageStr.includes('SELECT') ||
+            messageStr.includes('INSERT') ||
+            messageStr.includes('UPDATE') ||
+            messageStr.includes('DELETE')
+          )) {
+            return ''; // Return empty string instead of null
+          }
+          
           let log = `${timestamp} [${level.toUpperCase()}]: ${message}`;
-          if (Object.keys(meta).length > 0) {
+          if (Object.keys(meta).length > 0 && meta.context !== 'Server' && meta.context !== 'Database') {
             log += ` ${JSON.stringify(meta)}`;
           }
           if (stack) {
@@ -42,6 +58,10 @@ export class LoggerService implements NestLoggerService {
   }
 
   log(message: string, context?: string) {
+    // Skip logging for certain contexts to reduce noise
+    if (context === 'Prisma' || context === 'Database') {
+      return;
+    }
     this.logger.info(message, { context });
   }
 
@@ -61,26 +81,27 @@ export class LoggerService implements NestLoggerService {
     this.logger.verbose(message, { context });
   }
 
-  // Custom method for database connection logging
+  // Custom method for database connection logging - using logger methods
   logDatabaseConnection(databaseUrl: string, success: boolean) {
-    const sanitizedUrl = this.sanitizeDatabaseUrl(databaseUrl);
     if (success) {
-      this.log(`✅ Database connected successfully to: ${sanitizedUrl}`, 'Database');
+      this.log(colors.green('✅ Database connected successfully'), 'Database');
     } else {
-      this.error(`❌ Database connection failed to: ${sanitizedUrl}`, undefined, 'Database');
+      this.error(colors.red('❌ Database connection failed'), undefined, 'Database');
     }
   }
 
-  // Custom method for API endpoint logging
+  // Custom method for API endpoint logging - using logger methods
   logApiRequest(method: string, url: string, statusCode: number, duration: number) {
     const logLevel = statusCode >= 400 ? 'warn' : 'info';
-    this.logger.log(logLevel, `${method} ${url} - ${statusCode} (${duration}ms)`, { 
-      context: 'API',
-      method,
-      url,
-      statusCode,
-      duration
-    });
+    const color = statusCode >= 400 ? colors.yellow : colors.blue;
+    const emoji = statusCode >= 400 ? '⚠️' : '📡';
+    const message = color(`${emoji} ${method} ${url} - ${statusCode} (${duration}ms)`);
+    
+    if (statusCode >= 400) {
+      this.warn(message, 'API');
+    } else {
+      this.log(message, 'API');
+    }
   }
 
   private sanitizeDatabaseUrl(url: string): string {

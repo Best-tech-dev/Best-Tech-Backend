@@ -6,7 +6,7 @@ import { LoggerService } from '../common/logger/logger.service';
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   constructor(private logger: LoggerService) {
     super({
-      log: ['query', 'info', 'warn', 'error'],
+      log: ['info', 'warn', 'error'],
     });
   }
 
@@ -15,7 +15,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       await this.$connect();
       const databaseUrl = process.env.DATABASE_URL || 'unknown';
       this.logger.logDatabaseConnection(databaseUrl, true);
-      this.logger.log('Prisma client connected successfully', 'Prisma');
+      this.logger.log('🔌 Prisma client connected', 'Prisma');
     } catch (error) {
       const databaseUrl = process.env.DATABASE_URL || 'unknown';
       this.logger.logDatabaseConnection(databaseUrl, false);
@@ -28,4 +28,4 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     await this.$disconnect();
     this.logger.log('Prisma client disconnected', 'Prisma');
   }
-} 
+}
