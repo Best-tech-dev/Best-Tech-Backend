@@ -13,40 +13,45 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagg
 import { NewsletterService } from './newsletter.service';
 import { CreateNewsletterDto } from './dto/create-newsletter.dto';
 import { UpdateNewsletterDto } from './dto/update-newsletter.dto';
+import { QueryNewsletterDto } from './dto/query-newsletter.dto';
 import { RolesGuard } from '../common/guards/roles.guards';
 import { JwtAuthGuard } from '../identity/guards/jwt-auth.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import { 
+  NewsletterListResponseSchema, 
+  NewsletterSingleResponseSchema, 
+  NewsletterCreateResponseSchema 
+} from './schemas/newsletter-response.schema';
 
-@ApiTags('Newsletter')
-@Controller('newsletter')
+@ApiTags('Newsletter - Admin')
+@Controller('admin/newsletter')
 export class NewsletterController {
   constructor(private readonly newsletterService: NewsletterService) {}
 
-  @Post()
-  @ApiOperation({ summary: 'Subscribe to newsletter' })
-  @ApiResponse({ status: 201, description: 'Successfully subscribed to newsletter' })
-  @ApiResponse({ status: 409, description: 'Email already subscribed' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  create(@Body() createNewsletterDto: CreateNewsletterDto) {
-    return this.newsletterService.create(createNewsletterDto);
-  }
-
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN')
+  @Roles('admin')
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Get all newsletter subscriptions (Admin only)' })
-  @ApiResponse({ status: 200, description: 'List of all newsletter subscriptions' })
-  findAll() {
-    return this.newsletterService.findAll();
+  @ApiOperation({ summary: 'Get all newsletter subscriptions with pagination and filtering (Admin only)' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'List of newsletter subscriptions with pagination',
+    schema: NewsletterListResponseSchema
+  })
+  findAll(@Query() queryDto: QueryNewsletterDto) {
+    return this.newsletterService.findAll(queryDto);
   }
 
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN')
+  @Roles('admin')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get a specific newsletter subscription by ID (Admin only)' })
-  @ApiResponse({ status: 200, description: 'Newsletter subscription found' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Newsletter subscription found',
+    schema: NewsletterSingleResponseSchema
+  })
   @ApiResponse({ status: 404, description: 'Newsletter subscription not found' })
   findOne(@Param('id') id: string) {
     return this.newsletterService.findOne(id);
@@ -54,10 +59,14 @@ export class NewsletterController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN')
+  @Roles('admin')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update a newsletter subscription (Admin only)' })
-  @ApiResponse({ status: 200, description: 'Newsletter subscription updated successfully' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Newsletter subscription updated successfully',
+    schema: NewsletterSingleResponseSchema
+  })
   @ApiResponse({ status: 404, description: 'Newsletter subscription not found' })
   update(@Param('id') id: string, @Body() updateNewsletterDto: UpdateNewsletterDto) {
     return this.newsletterService.update(id, updateNewsletterDto);
@@ -65,7 +74,7 @@ export class NewsletterController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN')
+  @Roles('admin')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Delete a newsletter subscription (Admin only)' })
   @ApiResponse({ status: 200, description: 'Newsletter subscription deleted successfully' })
@@ -74,11 +83,4 @@ export class NewsletterController {
     return this.newsletterService.remove(id);
   }
 
-  @Delete('unsubscribe')
-  @ApiOperation({ summary: 'Unsubscribe from newsletter by email' })
-  @ApiResponse({ status: 200, description: 'Successfully unsubscribed from newsletter' })
-  @ApiResponse({ status: 409, description: 'Email not found in newsletter subscription' })
-  unsubscribe(@Query('email') email: string) {
-    return this.newsletterService.unsubscribe(email);
-  }
 } 
