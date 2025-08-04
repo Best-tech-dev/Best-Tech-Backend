@@ -16,6 +16,7 @@ import { AuthPayload } from './interfaces/auth-payload.interface';
 import * as colors from 'colors';
 import { failureResponse, successResponse } from 'src/utils/response';
 import { formatDate } from 'src/common/helper-functions/formatter';
+import { sendWelcomeEmail } from '../mailer/send-email';
 
 @Injectable()
 export class IdentityService {
@@ -46,7 +47,7 @@ export class IdentityService {
       // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
   
-      // Create new user
+            // Create new user
       const newUser = await this.prisma.user.create({
         data: {
           email,
@@ -55,7 +56,23 @@ export class IdentityService {
           lastName,
         }
       });
-  
+
+      // Send welcome email to the new user
+      try {
+        console.log(colors.blue(`Sending welcome email to ${email}`));
+        
+        await sendWelcomeEmail(
+          email,
+          firstName,
+          lastName
+        );
+        
+        console.log(colors.green('Welcome email sent successfully'));
+      } catch (emailError) {
+        console.error(colors.red('Error sending welcome email:'), emailError);
+        // Don't fail the main operation if email fails
+      }
+
       const formattedData = {
         id: newUser.id,
         role: newUser.role,
@@ -65,7 +82,7 @@ export class IdentityService {
         createdAt: formatDate(newUser.createdAt),
         updatedAt: formatDate(newUser.updatedAt),
       };
-  
+
       console.log(colors.magenta('New User successfully created'));
       return successResponse(201, true, 'New User successfully created', undefined, formattedData);
     } catch (error) {

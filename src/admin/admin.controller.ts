@@ -10,7 +10,7 @@ export class AdminController {
     constructor(private readonly adminService: AdminService) {}
 
     @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles('admin')
+    @Roles('ADMIN')
     @Get('users')
     async getAllUsers(@Req() req: Request) {
         // Accept role as query param: /admin/users?role=student|staff|admin
@@ -19,7 +19,7 @@ export class AdminController {
     }
 
     @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles('admin')
+    @Roles('ADMIN')
     @Get('dashboard')
     async getDashboard(
         @Req() req: Request,

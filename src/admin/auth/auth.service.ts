@@ -27,7 +27,7 @@ export class AdminAuthService {
         where: { email: dto.email } 
       });
   
-      if (!admin || admin.role !== 'ADMIN') {
+      if (!admin || admin.role !== 'admin') {
         console.log(colors.red('Admin not found'));
         return failureResponse(400, 'Admin not found', false);
       }

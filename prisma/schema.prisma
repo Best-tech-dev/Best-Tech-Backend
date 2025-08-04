@@ -19,7 +19,7 @@ model User {
   lastName     String
   email        String    @unique
   password     String
-  role         Role      @default(USER)
+  role         Role      @default(user)
   refreshToken String?
   otp          String?
   otpExpires   DateTime?
@@ -123,8 +123,74 @@ model Service {
   @@map("services")
 }
 
+model ContactUs {
+  id              String          @id @default(cuid())
+  fullName        String
+  email           String
+  companyName     String?
+  phoneNumber     String
+  subject         ContactSubject
+  proposedBudget  ProposedBudget
+  projectTimeline ProjectTimeline
+  projectDetails  String
+  status          ContactStatus   @default(initiated)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@map("contact_us")
+}
+
+model Newsletter {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("newsletter")
+}
+
 enum Role {
-  USER
-  ADMIN
-  STAFF
+  user
+  admin
+  staff
+}
+
+enum ContactStatus {
+  initiated
+  awaiting_payment
+  awaiting_document_agreement
+  mvp_in_progress
+  mvp_completed
+  project_in_progress
+  project_completed
+  on_hold
+  cancelled
+  rejected
+}
+
+enum ContactSubject {
+  general_enquiry
+  sales_and_partnership
+  technical_support
+  careers_and_hr
+  media_and_press
+}
+
+enum ProposedBudget {
+  five_hundred_thousand
+  one_million
+  three_million
+  five_million
+  ten_million
+  thwenty_five_million
+  fifty_million
+  hundred_million
+}
+
+enum ProjectTimeline {
+  asap
+  one_to_three_months
+  three_to_six_months
+  six_to_twelve_months
+  flexible
 }

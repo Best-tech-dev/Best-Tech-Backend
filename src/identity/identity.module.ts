@@ -7,6 +7,8 @@ import { IdentityService } from './identity.service';
 import { IdentityController } from './identity.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { LoggerModule } from '../common/logger/logger.module';
 
 @Module({
   imports: [
@@ -22,13 +24,15 @@ import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
       inject: [ConfigService],
     }),
     ConfigModule,
+    LoggerModule,
   ],
   controllers: [IdentityController],
   providers: [
     IdentityService, 
     JwtStrategy, 
-    JwtRefreshStrategy
+    JwtRefreshStrategy,
+    JwtAuthGuard
   ],
-  exports: [IdentityService],
+  exports: [IdentityService, JwtAuthGuard],
 })
 export class IdentityModule {}

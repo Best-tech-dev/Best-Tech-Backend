@@ -7,6 +7,8 @@ import { IdentityModule } from './identity/identity.module';
 import { UsersModule } from './users/users.module';
 import { AdminModule } from './admin/admin.module';
 import { ServicesModule } from './services/services.module';
+import { ContactUsModule } from './contact-us/contact-us.module';
+import { NewsletterModule } from './newsletter/newsletter.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { LoggerModule } from './common/logger/logger.module';
 import { AppController } from './app.controller';
@@ -24,7 +26,9 @@ import { AppService } from './app.service';
     IdentityModule,
     UsersModule,
     AdminModule,
-    ServicesModule
+    ServicesModule,
+    ContactUsModule,
+    NewsletterModule
   ],
   controllers: [AppController],
   providers: [AppService]

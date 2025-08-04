@@ -62,7 +62,7 @@ export class ServicesController {
     @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
     @ApiResponse({ status: 409, description: 'Category with supplied name already exists' })
     @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles('admin')
+    @Roles('ADMIN')
     @Post('admin/create-category')
     async createCategory(
     @Body() dto: CreateCategoryDto,
@@ -81,7 +81,7 @@ export class ServicesController {
     @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
     @ApiResponse({ status: 409, description: 'Subcategory with supplied name already exists' })
     @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles('admin')
+    @Roles('ADMIN')
     @Post('admin/create-subcategory')
     async createSubcategory(
     @Body() dto: CreateSubcategoryDto,
@@ -99,7 +99,7 @@ export class ServicesController {
     @ApiResponse({ status: 403, description: 'Forbidden - Admin access required' })
     @ApiResponse({ status: 409, description: 'Service with supplied name already exists' })
     @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles('admin')
+    @Roles('ADMIN')
     @Post('admin/create')
     async createService(
         @Body() dto: CreateServiceDto, 

@@ -58,6 +58,8 @@ async function bootstrap() {
     .addTag('Services', 'Service management endpoints')
     .addTag('Categories', 'Category management endpoints')
     .addTag('Admin', 'Admin-specific endpoints')
+    .addTag('Contact Us', 'Contact us form endpoints')
+    .addTag('Newsletter', 'Newsletter subscription endpoints')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
