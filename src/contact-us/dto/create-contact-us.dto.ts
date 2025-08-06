@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsEmail, IsOptional, IsEnum, IsNotEmpty } from 'class-validator';
-import { ContactSubject, ProposedBudget, ProjectTimeline } from '@prisma/client';
+import { ContactSubject, ProposedBudget, ProjectTimeline, ContactUsProjectType } from '@prisma/client';
 import { Transform } from 'class-transformer';
 
 export class CreateContactUsDto {
@@ -75,4 +75,13 @@ export class CreateContactUsDto {
   @IsNotEmpty()
   @Transform(({ value }) => value.toLowerCase())
   projectDetails: string;
+
+  @ApiProperty({
+    description: 'Project type',
+    enum: ContactUsProjectType,
+    example: ContactUsProjectType.general_enquiry,
+  })
+  @IsEnum(ContactUsProjectType)
+  @Transform(({ value }) => value.toLowerCase())
+  projectType: ContactUsProjectType;
 } 
