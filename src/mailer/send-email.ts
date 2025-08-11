@@ -4,6 +4,7 @@ import { otpVerificationCodeTemplate } from './email.template';
 import { contactUsSubmissionTemplate } from './contact-us-submission';
 import { CreateContactUsDto } from '../contact-us/dto/create-contact-us.dto';
 import { welcomeEmailTemplate } from './welcome-email';
+import { contactUsUserConfirmationTemplate } from './contact-us-user-confirmation';
 import { newsletterSubscriptionAdminTemplate, newsletterWelcomeTemplate } from './newsletter-subscription';
 import { newsletterEmailTemplate } from './newsletter-template';
 
@@ -84,6 +85,46 @@ export const sendContactUsNotification = async (
   } catch (error) {
     console.error('Error sending contact us notification email:', error);
     throw new Error('Failed to send contact us notification email');
+  }
+};
+
+export const sendContactUsUserConfirmation = async (
+  userEmail: string,
+  submissionData: CreateContactUsDto,
+  submissionId: string
+): Promise<void> => {
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+      throw new Error("SMTP credentials missing in environment variables");
+    }
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      host: process.env.GOOGLE_SMTP_HOST,
+      port: process.env.GOOGLE_SMTP_PORT ? parseInt(process.env.GOOGLE_SMTP_PORT) : 587,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+    });
+
+    const htmlContent = contactUsUserConfirmationTemplate(submissionData, submissionId);
+
+    const mailOptions = {
+      from: {
+        name: "Best Technologies LTD - Support",
+        address: process.env.EMAIL_USER as string,
+      },
+      to: userEmail,
+      subject: `✅ We Received Your Message — Reference ${submissionId}`,
+      html: htmlContent,
+    } as nodemailer.SendMailOptions;
+
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error('Error sending contact us user confirmation email:', error);
+    throw new Error('Failed to send contact us user confirmation email');
   }
 };
 

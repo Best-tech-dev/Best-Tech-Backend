@@ -69,7 +69,7 @@ async function bootstrap() {
     },
   });
 
-  const port = process.env.PORT || 2000;
+  const port = process.env.PORT || 1000;
   await app.listen(port, '0.0.0.0');
 
   logger.log(colors.cyan('🚀 Server running on:') + colors.magenta(` http://localhost:${port}/api/v1`));

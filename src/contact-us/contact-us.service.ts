@@ -7,7 +7,7 @@ import { successResponse, failureResponse } from '../utils/response';
 import { LoggerService } from '../common/logger/logger.service';
 import * as colors from 'colors';
 import { formatDate } from 'src/common/helper-functions/formatter';
-import { sendContactUsNotification } from '../mailer/send-email';
+import { sendContactUsNotification, sendContactUsUserConfirmation } from '../mailer/send-email';
 
 @Injectable()
 export class ContactUsService {
@@ -59,6 +59,20 @@ export class ContactUsService {
       } catch (emailError) {
         this.logger.error(colors.red('Error sending admin notification email:'), emailError);
         // Don't fail the main operation if email fails
+      }
+
+      // Send confirmation email to the submitting user (non-blocking failure)
+      try {
+        this.logger.log(colors.blue(`Sending confirmation to user: ${createContactUsDto.email}`));
+        await sendContactUsUserConfirmation(
+          createContactUsDto.email,
+          createContactUsDto,
+          contactUs.id
+        );
+        this.logger.log(colors.green('User confirmation email sent successfully'));
+      } catch (userEmailError) {
+        this.logger.error(colors.red('Error sending user confirmation email:'), userEmailError);
+        // Do not fail the operation on email failure
       }
 
       const formattedData = {
